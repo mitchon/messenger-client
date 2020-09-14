@@ -1,26 +1,48 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, {useState} from 'react';
+import { BrowserRouter as Router, Switch, Route, Redirect} from 'react-router-dom';
+import {gql, useQuery} from '@apollo/client';
+import {Login} from './modules/Login'
 
-function App() {
+export const App = () => {
+  const [logged, setLogged] = useState(false);
+
+  const GetMsg = gql`
+    query {
+      messages {
+        id
+        text
+        author {
+          login
+        }
+      }
+    }
+  `;
+
+  const logInHandler = (flag): void => {
+    setLogged(flag);
+  }
+
+  const {loading, error, data} = useQuery(GetMsg);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Switch>
+        <Route exact path="/">
+          {() => {if(!localStorage.getItem('User') && !logged)
+            return <Login logInHandler = {logInHandler}/>
+          else return <Redirect to='/messages' />}}
+        </Route>
+        <Route exact path="/messages">
+          {()  => {
+            if (error) return <p>error</p>
+            if (loading) return <p>loading</p>
+            
+            return <ul>{data.messages.map((message) : any => {
+              return <li key={message?.id}>{message?.text + " " + message?.author?.login}</li>
+            })}</ul>
+          }}
+        </Route>
+      </Switch>
+    </Router>
   );
 }
-
-export default App;
