@@ -1,7 +1,7 @@
 import React, {useRef} from 'react';
 import {gql, useMutation} from '@apollo/client';
 
-export const Login = ({logInHandler}) => {
+export const Login = ({loginHandler}) => {
     const loginInput = useRef('');
     const passwordInput = useRef('');
 
@@ -24,8 +24,8 @@ export const Login = ({logInHandler}) => {
                 password: passwordInput.current.value
             }}).then(res => {
                 if (res.data.signIn) {
-                    localStorage.setItem('User', res.data.signIn);
-                    logInHandler(true);
+                    localStorage.setItem('UserID', res.data.signIn.id);
+                    loginHandler(true);
                 }
                 else alert("Incorrect login or password")
             })

@@ -1,47 +1,39 @@
 import React, {useState} from 'react';
 import { BrowserRouter as Router, Switch, Route, Redirect} from 'react-router-dom';
-import {gql, useQuery} from '@apollo/client';
-import {Login} from './modules/Login'
+import {Login} from './modules/Login';
+import {Logout} from './modules/Logout';
+import {Messages} from './modules/Messages'
+import {ProtectedRoute} from './modules/ProtectedRoute'
 
 export const App = () => {
-  const [logged, setLogged] = useState(false);
+  const [isLogged, SetIsLogged] = useState(false);
+  const [isLogged2, SetIsLogged2] = useState(false);
 
-  const GetMsg = gql`
-    query {
-      messages {
-        id
-        text
-        author {
-          login
-        }
-      }
-    }
-  `;
+  const loginHandler = (flag : boolean) => {
+    SetIsLogged(flag);
 
-  const logInHandler = (flag): void => {
-    setLogged(flag);
+    if(flag) {SetIsLogged2(flag)}
   }
-
-  const {loading, error, data} = useQuery(GetMsg);
 
   return (
     <Router>
       <Switch>
         <Route exact path="/">
-          {() => {if(!localStorage.getItem('User') && !logged)
-            return <Login logInHandler = {logInHandler}/>
-          else return <Redirect to='/messages' />}}
+          {(isLogged || localStorage.getItem('UserID')) ?
+            <Redirect to='/messages' />:
+            <Login loginHandler={loginHandler} />}
         </Route>
-        <Route exact path="/messages">
-          {()  => {
-            if (error) return <p>error</p>
-            if (loading) return <p>loading</p>
-            
-            return <ul>{data.messages.map((message) : any => {
-              return <li key={message?.id}>{message?.text + " " + message?.author?.login}</li>
-            })}</ul>
-          }}
-        </Route>
+
+        <ProtectedRoute exact path="/messages" flag = {isLogged || localStorage.getItem('UserID') || isLogged2} >
+          <Messages />
+          <Logout loginHandler={loginHandler} />
+        </ProtectedRoute>
+
+        <Route>
+          <Redirect to='/404' />
+          404 not found 
+        </Route> 
+
       </Switch>
     </Router>
   );
